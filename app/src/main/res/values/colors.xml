@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="main_color">#33d3ff</color>
+    <color name="main_text_color">#ffffff</color>
+    <color name="edittext_maps_background">#d0ffffff</color>
+    <color name="edittext_maps_textcolor">#0090bb</color>
+</resources>
