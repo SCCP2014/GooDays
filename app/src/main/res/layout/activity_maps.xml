@@ -15,49 +15,24 @@
             android:layout_height="match_parent"
             tools:context="org.misoton.goodays.MapsActivity" />
 
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="fill_parent"
+        <AutoCompleteTextView
+            android:id="@+id/maps_actv"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="end">
+            android:layout_margin="16dp"
+            android:background="@color/edittext_maps_background"
+            android:drawableLeft="@drawable/ic_search_black"
+            android:lines="1" />
 
-            <!--<ImageView-->
-                <!--android:layout_width="wrap_content"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:layout_marginTop="16dp"-->
-                <!--android:layout_marginBottom="16dp"-->
-                <!--android:layout_marginLeft="16dp"-->
-                <!--android:layout_marginRight="8dp"-->
-                <!--android:contentDescription="@string/app_name"-->
-                <!--android:padding="8dp"-->
-                <!--android:scaleType="fitCenter"-->
-                <!--android:background="@drawable/ic_search_black"-->
-                <!--android:id="@+id/imageView" />-->
-
-            <!--<EditText-->
-                <!--android:id="@+id/maps_search_et"-->
-                <!--android:layout_width="0dp"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:layout_weight="1"-->
-                <!--android:contentDescription="@string/app_name"-->
-                <!--android:background="@color/edittext_maps_background"-->
-                <!--android:layout_marginTop="16dp"-->
-                <!--android:layout_marginBottom="16dp"-->
-                <!--android:layout_marginLeft="8dp"-->
-                <!--android:layout_marginRight="16dp"-->
-                <!--android:padding="8dp"-->
-                <!--android:textColor="@color/edittext_maps_textcolor"-->
-                <!--android:inputType="textPostalAddress" />-->
-
-            <SearchView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@color/edittext_maps_background"
-                android:layout_margin="16dp"
-                android:id="@+id/maps_sv" />
-
-        </LinearLayout>
-
+        <ImageButton
+            android:id="@+id/button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_margin="16dp"
+            android:visibility="gone"
+            android:background="@color/edittext_maps_background"
+            android:layout_gravity="start|bottom"
+            android:src="@drawable/ic_cancel_black" />
 
 
     </FrameLayout>

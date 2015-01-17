@@ -5,11 +5,13 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.widget.SearchView;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.EditText;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
+import android.widget.LinearLayout;
+import android.widget.SearchView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -17,23 +19,36 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
-public class MapsActivity extends FragmentActivity {
+public class MapsActivity extends FragmentActivity implements View.OnKeyListener, GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerClickListener {
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
-    private SearchView search_sv;
+    private AutoCompleteTextView search_actv;
+    private InputMethodManager inputMethodManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
-        search_sv = (SearchView) this.findViewById(R.id.maps_sv);
-        search_sv.setOnQueryTextListener(this.onQueryTextListener);
+        inputMethodManager =  (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+
+        search_actv = (AutoCompleteTextView) this.findViewById(R.id.maps_actv);
+
+        String[] address = new String[] {"会津若松"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_dropdown_item_1line, address);
+
+        search_actv.setAdapter(adapter);
+        search_actv.setThreshold(1);
+        search_actv.setOnKeyListener(this);
 
 //        ActionBar actionBar = getSupportActionBar();
 //        actionBar.setDisplayShowHomeEnabled(true);
@@ -60,6 +75,9 @@ public class MapsActivity extends FragmentActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        mMap.setOnMapLongClickListener(this);
+        mMap.setOnMarkerClickListener(this);
     }
 
     @Override
@@ -141,5 +159,51 @@ public class MapsActivity extends FragmentActivity {
         for(Address ad : markerAddressList){
             mMap.addMarker(new MarkerOptions().position(new LatLng(ad.getLatitude(), ad.getLongitude())));
         }
+    }
+
+    private void addMarker(LatLng latLng){
+        mMap.addMarker(new MarkerOptions().position(latLng));
+    }
+
+    @Override
+    public boolean onKey(View v, int keyCode, KeyEvent event) {
+        switch(v.getId()){
+            case R.id.maps_actv:
+                if((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)){
+                    //キーボードを閉じる
+                    inputMethodManager.hideSoftInputFromWindow(search_actv.getWindowToken(), InputMethodManager.RESULT_UNCHANGED_SHOWN);
+
+                    updateSpot(search_actv.getText().toString());
+                    return true;
+                }
+                break;
+            default:
+        }
+
+        return false;
+    }
+
+    private void updateSpot(String address){
+        try {
+            Geocoder geocoder = new Geocoder(MapsActivity.this);
+            List<Address> list = geocoder.getFromLocationName(address, 10);
+            Toast.makeText(MapsActivity.this, "" + list.get(0).getLatitude() + list.get(0).getLongitude(), Toast.LENGTH_LONG).show();
+            updateMarkers(list);
+            moveMapToSpot(list.get(0).getLatitude(), list.get(0).getLongitude());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onMapLongClick(LatLng latLng) {
+        addMarker(latLng);
+        moveMapToSpot(latLng.latitude, latLng.longitude);
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        marker.remove();
+        return false;
     }
 }
