@@ -10,7 +10,6 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.LinearLayout;
 import android.widget.SearchView;
 import android.widget.Toast;
 
@@ -23,9 +22,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 public class MapsActivity extends FragmentActivity implements View.OnKeyListener, GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerClickListener {
 
@@ -49,14 +46,6 @@ public class MapsActivity extends FragmentActivity implements View.OnKeyListener
         search_actv.setAdapter(adapter);
         search_actv.setThreshold(1);
         search_actv.setOnKeyListener(this);
-
-//        ActionBar actionBar = getSupportActionBar();
-//        actionBar.setDisplayShowHomeEnabled(true);
-//        actionBar.setDisplayShowCustomEnabled(true);
-//        actionBar.setDisplayUseLogoEnabled(true);
-//        actionBar.setLogo(R.drawable.clear_outing);
-//        actionBar.setDisplayShowTitleEnabled(false);
-//        actionBar.setBackgroundDrawable(getResources().getDrawable(R.drawable.actionbar_background_res));
 
         setUpMapIfNeeded();
 
@@ -86,21 +75,6 @@ public class MapsActivity extends FragmentActivity implements View.OnKeyListener
         setUpMapIfNeeded();
     }
 
-    /**
-     * Sets up the map if it is possible to do so (i.e., the Google Play services APK is correctly
-     * installed) and the map has not already been instantiated.. This will ensure that we only ever
-     * call {@link #setUpMap()} once when {@link #mMap} is not null.
-     * <p/>
-     * If it isn't installed {@link SupportMapFragment} (and
-     * {@link com.google.android.gms.maps.MapView MapView}) will show a prompt for the user to
-     * install/update the Google Play services APK on their device.
-     * <p/>
-     * A user can return to this FragmentActivity after following the prompt and correctly
-     * installing/updating/enabling the Google Play services. Since the FragmentActivity may not
-     * have been completely destroyed during this process (it is likely that it would only be
-     * stopped or paused), {@link #onCreate(Bundle)} may not be called again so we should call this
-     * method in {@link #onResume()} to guarantee that it will be called.
-     */
     private void setUpMapIfNeeded() {
         // Do a null check to confirm that we have not already instantiated the map.
         if (mMap == null) {
@@ -114,12 +88,6 @@ public class MapsActivity extends FragmentActivity implements View.OnKeyListener
         }
     }
 
-    /**
-     * This is where we can add markers or lines, add listeners or move the camera. In this case, we
-     * just add a marker near Africa.
-     * <p/>
-     * This should only be called once and when we are sure that {@link #mMap} is not null.
-     */
     private void setUpMap() {
         mMap.clear();
     }
@@ -157,12 +125,16 @@ public class MapsActivity extends FragmentActivity implements View.OnKeyListener
     private void updateMarkers(List<Address> markerAddressList){
         mMap.clear();
         for(Address ad : markerAddressList){
-            mMap.addMarker(new MarkerOptions().position(new LatLng(ad.getLatitude(), ad.getLongitude())));
+            this.addMarker(new LatLng(ad.getLatitude(), ad.getLongitude()));
         }
     }
 
     private void addMarker(LatLng latLng){
-        mMap.addMarker(new MarkerOptions().position(latLng));
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.position(latLng);
+        markerOptions.title("unk");
+
+        mMap.addMarker(markerOptions);
     }
 
     @Override
@@ -203,7 +175,7 @@ public class MapsActivity extends FragmentActivity implements View.OnKeyListener
 
     @Override
     public boolean onMarkerClick(Marker marker) {
-        marker.remove();
+        //marker.remove();
         return false;
     }
 }

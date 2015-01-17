@@ -24,17 +24,6 @@
             android:drawableLeft="@drawable/ic_search_black"
             android:lines="1" />
 
-        <ImageButton
-            android:id="@+id/button"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_margin="16dp"
-            android:visibility="gone"
-            android:background="@color/edittext_maps_background"
-            android:layout_gravity="start|bottom"
-            android:src="@drawable/ic_cancel_black" />
-
-
     </FrameLayout>
 
 
