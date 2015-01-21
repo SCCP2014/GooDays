@@ -16,6 +16,8 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        AddressHistoryManager.init(this);
+
         Button map = (Button) this.findViewById(R.id.main_intent_map_bt);
         map.setOnClickListener(this);
     }
