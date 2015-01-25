@@ -9,11 +9,18 @@
     android:gravity="center"
     android:orientation="vertical"
     tools:context=".MainActivity">
-
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/app_name"
+        android:id="@+id/main_test_tb"
+        android:layout_gravity="center_horizontal" />
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/title_activity_maps"
         android:id="@+id/main_intent_map_bt"
         android:layout_gravity="center_horizontal" />
+
+
 </LinearLayout>

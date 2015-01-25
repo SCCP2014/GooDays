@@ -1,5 +1,8 @@
 package org.misoton.goodays.weather;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MainInfo {
     public double temp;
     public double temp_min;
