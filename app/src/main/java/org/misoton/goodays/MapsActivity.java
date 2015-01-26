@@ -2,8 +2,6 @@ package org.misoton.goodays;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.Bundle;
@@ -32,12 +30,10 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.misoton.goodays.weather.Forecast;
-import org.misoton.goodays.weather.Weather;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 public class MapsActivity extends FragmentActivity implements LoaderManager.LoaderCallbacks<WeatherApiResponse>, View.OnKeyListener, GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerClickListener {
 
@@ -132,6 +128,11 @@ public class MapsActivity extends FragmentActivity implements LoaderManager.Load
 
     private void updateMarkers(List<Address> markerAddressList) {
         mMap.clear();
+        if(this.getSupportLoaderManager().hasRunningLoaders()){
+            for(int i = 0; i < loaderId; i ++) {
+                this.getLoaderManager().destroyLoader(i);
+            }
+        }
         for (Address ad : markerAddressList) {
             this.callLoaderForecast(ad);
         }
@@ -226,6 +227,7 @@ public class MapsActivity extends FragmentActivity implements LoaderManager.Load
             loader.setLocation(args.getDouble("lat"), args.getDouble("lon"));
         } else {
             loader = new WeatherApiLoader(getApplication(), WeatherApiLoader.MODE_GETIMAGE);
+            loader.setLocation(args.getDouble("lat"), args.getDouble("lon"));
             loader.setImageName(args.getString("icon"));
         }
         loader.forceLoad();
@@ -241,9 +243,11 @@ public class MapsActivity extends FragmentActivity implements LoaderManager.Load
             try {
                 ObjectMapper mapper = new ObjectMapper();
                 Forecast forecast = mapper.readValue(data.getStringResponse(), Forecast.class);
-                Toast.makeText(this, forecast.list.get(0).weather.get(0).main, Toast.LENGTH_LONG).show();
+                WeatherApiLoader weatherApiLoader = (WeatherApiLoader)loader;
                 Bundle bundle = new Bundle();
                 bundle.putBoolean("forecast", false);
+                bundle.putDouble("lat", weatherApiLoader.getLat());
+                bundle.putDouble("lon", weatherApiLoader.getLon());
                 bundle.putString("icon", forecast.list.get(0).weather.get(0).icon);
                 this.getSupportLoaderManager().initLoader(loaderId++, bundle, this);
             } catch (IOException e) {
@@ -252,10 +256,10 @@ public class MapsActivity extends FragmentActivity implements LoaderManager.Load
 
 
         } else if(data.isBitmap()) {
-            Toast.makeText(this, "error1", Toast.LENGTH_LONG).show();
             Log.d("Map", "response is BitMap");
             WeatherApiLoader weatherApiLoader = (WeatherApiLoader)loader;
             test_iv.setImageBitmap(data.getBitmapResponse());
+            Log.d("Maps", "" + weatherApiLoader.getImageName());
             this.addMarker(new LatLng(weatherApiLoader.getLat(), weatherApiLoader.getLon()),
                     BitmapDescriptorFactory.fromBitmap(data.getBitmapResponse()));
 
