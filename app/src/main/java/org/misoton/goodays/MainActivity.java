@@ -12,8 +12,11 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 public class MainActivity extends ActionBarActivity implements View.OnClickListener {
 
@@ -37,7 +40,11 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         String datest = format.format(date);
         Toast.makeText(this, datest + " " + unixtime, Toast.LENGTH_LONG).show();
 
-        test_tb.setText("" + unixtime + "\n" + 1422151200);
+        String poly_line = "a~l~Fjk~uOwHJy@P";
+
+        List<LatLng> poly = PolylineDecoder.decodePoly(poly_line);
+
+        test_tb.setText("" + poly.get(0).latitude + "\n" + poly.get(0).longitude);
 
         Button map = (Button) this.findViewById(R.id.main_intent_map_bt);
         map.setOnClickListener(this);

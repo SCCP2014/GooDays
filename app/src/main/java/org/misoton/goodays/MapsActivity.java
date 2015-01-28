@@ -6,7 +6,9 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.util.Log;
@@ -15,7 +17,6 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,22 +33,33 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import org.misoton.goodays.weather.Forecast;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class MapsActivity extends FragmentActivity implements LoaderManager.LoaderCallbacks<WeatherApiResponse>, View.OnKeyListener, GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerClickListener {
+public class MapsActivity extends FragmentActivity implements LoaderManager.LoaderCallbacks<WeatherApiResponse>, View.OnKeyListener, GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerClickListener{
 
     private GoogleMap mMap;
+    private HashMap<Integer, Forecast> forecastMap = new HashMap<>();
+    private MarkerManager markerManager;
     private AutoCompleteTextView search_actv;
-    private ImageView test_iv;
     private InputMethodManager inputMethodManager;
     private SharedPreferences sharedPreferences;
+    private List<Integer> runningLoaders;
+    private boolean shownWeatherInfoFragment = false;
+    private boolean initializedMapLocation = false;
+    private SpotWeatherInfoFragment weatherInfoFragment;
     private int loaderId = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
+        markerManager = new MarkerManager();
 
         inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 
@@ -63,9 +75,6 @@ public class MapsActivity extends FragmentActivity implements LoaderManager.Load
 
         mMap.setOnMapLongClickListener(this);
         mMap.setOnMarkerClickListener(this);
-
-        test_iv = (ImageView) this.findViewById(R.id.test_iv);
-        test_iv.setImageDrawable(getResources().getDrawable(R.drawable.ic_launcher));
     }
 
     @Override
@@ -115,8 +124,9 @@ public class MapsActivity extends FragmentActivity implements LoaderManager.Load
 
         // keeping zoom value, if current value is lower than 10.0f
         float zoom = mMap.getCameraPosition().zoom;
-        if (mMap.getCameraPosition().zoom < 10.0f) {
+        if (!initializedMapLocation) {
             zoom = 10.0f;
+            initializedMapLocation = true;
         }
 
         CameraPosition spot = new CameraPosition.Builder()
@@ -127,14 +137,18 @@ public class MapsActivity extends FragmentActivity implements LoaderManager.Load
     }
 
     private void updateMarkers(List<Address> markerAddressList) {
-        mMap.clear();
+        markerManager.removeAllMarkers();
         if(this.getSupportLoaderManager().hasRunningLoaders()){
-            for(int i = 0; i < loaderId; i ++) {
-                this.getLoaderManager().destroyLoader(i);
-            }
+            destroyAllLoader();
         }
         for (Address ad : markerAddressList) {
             this.callLoaderForecast(ad);
+        }
+    }
+
+    private void destroyAllLoader(){
+        for(int i = 0; i < loaderId; i ++) {
+            this.getLoaderManager().destroyLoader(i);
         }
     }
 
@@ -154,12 +168,13 @@ public class MapsActivity extends FragmentActivity implements LoaderManager.Load
         this.getSupportLoaderManager().initLoader(loaderId++, bundle, this);
     }
 
-    private void addMarker(LatLng latLng, BitmapDescriptor descriptor) {
+    private void addMarker(LatLng latLng, BitmapDescriptor descriptor, Forecast forecast) {
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(latLng);
+        markerOptions.title(forecast.list.get(0).weather.get(0).main);
         markerOptions.icon(descriptor);
         markerOptions.visible(true);
-        mMap.addMarker(markerOptions);
+        markerManager.addMarker(new WeatherMarker(mMap.addMarker(markerOptions), forecast));
     }
 
     @Override
@@ -215,7 +230,41 @@ public class MapsActivity extends FragmentActivity implements LoaderManager.Load
 
     @Override
     public boolean onMarkerClick(Marker marker) {
-        //marker.remove();
+        Forecast markerForecast = markerManager.getMarkerForecast(marker);
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        Fragment next = new SpotWeatherInfoFragment();
+
+        SimpleDateFormat format = new SimpleDateFormat("M月d日H時");
+        ArrayList<String> dateList = new ArrayList<>();
+        ArrayList<String> weatherList = new ArrayList<>();
+        for(int i = 1; i < markerForecast.list.size(); i ++){
+            Date date = new Date(markerForecast.list.get(i).dt * 1000);
+            dateList.add(format.format(date));
+
+            weatherList.add(markerForecast.list.get(i).weather.get(0).main);
+        }
+
+        Bundle bundle = new Bundle();
+        bundle.putString("name", markerForecast.city.name);
+        bundle.putStringArrayList("weather", weatherList);
+        bundle.putStringArrayList("date", dateList);
+        next.setArguments(bundle);
+
+        weatherInfoFragment = (SpotWeatherInfoFragment)next;
+
+        ft.setCustomAnimations(
+                R.anim.fragment_slide_in,
+                R.anim.fragment_slide_out,
+                R.anim.fragment_slide_in,
+                R.anim.fragment_slide_out);
+
+        ft.replace(R.id.maps_info_fragment, next);
+
+        ft.addToBackStack(null);
+        ft.commit();
+
+        shownWeatherInfoFragment = true;
+
         return false;
     }
 
@@ -237,7 +286,6 @@ public class MapsActivity extends FragmentActivity implements LoaderManager.Load
     @Override
     public void onLoadFinished(Loader<WeatherApiResponse> loader, WeatherApiResponse data) {
 
-
         if(data.isString()){
             Log.d("Map", data.getStringResponse());
             try {
@@ -249,20 +297,19 @@ public class MapsActivity extends FragmentActivity implements LoaderManager.Load
                 bundle.putDouble("lat", weatherApiLoader.getLat());
                 bundle.putDouble("lon", weatherApiLoader.getLon());
                 bundle.putString("icon", forecast.list.get(0).weather.get(0).icon);
+                forecastMap.put(loaderId, forecast);
                 this.getSupportLoaderManager().initLoader(loaderId++, bundle, this);
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
-
         } else if(data.isBitmap()) {
             Log.d("Map", "response is BitMap");
             WeatherApiLoader weatherApiLoader = (WeatherApiLoader)loader;
-            test_iv.setImageBitmap(data.getBitmapResponse());
             Log.d("Maps", "" + weatherApiLoader.getImageName());
             this.addMarker(new LatLng(weatherApiLoader.getLat(), weatherApiLoader.getLon()),
-                    BitmapDescriptorFactory.fromBitmap(data.getBitmapResponse()));
-
+                    BitmapDescriptorFactory.fromBitmap(data.getBitmapResponse()), forecastMap.get(weatherApiLoader.getId()));
         } else {
             Toast.makeText(this, "error2", Toast.LENGTH_LONG).show();
             Log.d("Map", "unknown response");
