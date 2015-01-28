@@ -1,64 +1,45 @@
 package org.misoton.goodays;
 
 import android.content.Intent;
+import android.os.Handler;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.android.gms.maps.model.LatLng;
+public class MainActivity extends ActionBarActivity {
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-
-public class MainActivity extends ActionBarActivity implements View.OnClickListener {
+    Handler handler;
+    Runnable runnable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        AddressHistoryManager.init(this);
+        ActionBar actionBar = this.getSupportActionBar();
+        actionBar.hide();
 
-        TextView test_tb = (TextView) this.findViewById(R.id.main_test_tb);
-
-        long unixtime = System.currentTimeMillis() / 1000;
-
-        Log.d("Main", "" + unixtime);
-
-        long avavvavav = 1422151200;
-
-        Date date = new Date(avavvavav * 1000);
-        SimpleDateFormat format = new SimpleDateFormat("yyyy年M月d日H時m分s秒");
-        String datest = format.format(date);
-        Toast.makeText(this, datest + " " + unixtime, Toast.LENGTH_LONG).show();
-
-        String poly_line = "a~l~Fjk~uOwHJy@P";
-
-        List<LatLng> poly = PolylineDecoder.decodePoly(poly_line);
-
-        test_tb.setText("" + poly.get(0).latitude + "\n" + poly.get(0).longitude);
-
-        Button map = (Button) this.findViewById(R.id.main_intent_map_bt);
-        map.setOnClickListener(this);
+        runnable = new Runnable() {
+            @Override
+            public void run() {
+                AddressHistoryManager.init(MainActivity.this);
+                Intent intent = new Intent(MainActivity.this, MapsActivity.class);
+                intent.setAction(Intent.ACTION_VIEW);
+                startActivity(intent);
+            }
+        };
     }
 
     @Override
-    public void onClick(View v) {
-        switch (v.getId()){
-            case R.id.main_intent_map_bt:
-                Intent intent = new Intent(this, MapsActivity.class);
-                intent.setAction(Intent.ACTION_VIEW);
-                startActivity(intent);
-                break;
-            default:
-        }
+    protected void onResume() {
+        super.onResume();
+        handler = new Handler();
+        handler.postDelayed(runnable, 1000);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        handler.removeCallbacks(runnable);
     }
 }
