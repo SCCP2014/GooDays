@@ -26,6 +26,7 @@ public class MainActivity extends ActionBarActivity {
                 Intent intent = new Intent(MainActivity.this, MapsActivity.class);
                 intent.setAction(Intent.ACTION_VIEW);
                 startActivity(intent);
+                finish();
             }
         };
     }
