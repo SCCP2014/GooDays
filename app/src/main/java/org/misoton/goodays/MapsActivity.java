@@ -210,6 +210,7 @@ public class MapsActivity extends FragmentActivity implements LoaderManager.Load
             addAddressHistory(address, list.get(0).getLatitude(), list.get(0).getLongitude());
         } catch (IOException e) {
             e.printStackTrace();
+            Toast.makeText(this, "Please wait for a while, and retry.", Toast.LENGTH_LONG).show();
         } catch (IndexOutOfBoundsException e) {
             e.printStackTrace();
             Toast.makeText(this, "\"" + address + "\" is not available address.", Toast.LENGTH_LONG).show();
@@ -285,6 +286,11 @@ public class MapsActivity extends FragmentActivity implements LoaderManager.Load
 
     @Override
     public void onLoadFinished(Loader<WeatherApiResponse> loader, WeatherApiResponse data) {
+
+        if(data == null){
+            Toast.makeText(this, "Cannot load a weather information.", Toast.LENGTH_LONG);
+            return;
+        }
 
         if(data.isString()){
             Log.d("Map", data.getStringResponse());
